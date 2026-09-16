@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ current_path }} - Maven Repository</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --row-hover: #f1f5f9;
+            --header-bg: #f8fafc;
+            --badge-folder: #3b82f6;
+            --badge-jar: #8b5cf6;
+            --badge-pom: #f97316;
+            --badge-xml: #06b6d4;
+            --badge-hash: #64748b;
+            --code-bg: #f1f5f9;
+            --border-subtle: #cbd5e1;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --card-border: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --primary-light: #1e293b;
+            --row-hover: #1e293b;
+            --header-bg: #111827;
+            --badge-folder: #60a5fa;
+            --badge-jar: #a78bfa;
+            --badge-pom: #fb923c;
+            --badge-xml: #22d3ee;
+            --badge-hash: #9ca3af;
+            --code-bg: #1e293b;
+            --border-subtle: #374151;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 24px 16px 48px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .repo-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2563eb, #8b5cf6);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .repo-logo svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        .repo-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .breadcrumbs {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .breadcrumb-item {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--primary);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .breadcrumb-sep {
+            color: var(--border-subtle);
+            user-select: none;
+        }
+
+        .snippet-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .snippet-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .snippet-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .snippet-tab {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .snippet-tab.active {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .snippet-code-wrapper {
+            position: relative;
+        }
+
+        .snippet-code {
+            background: var(--code-bg);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            border-radius: 5px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .copy-btn:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .stats-badge {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            padding: 12px 18px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        th.col-name { width: 55%; }
+        th.col-size { width: 20%; }
+        th.col-date { width: 25%; }
+
+        tbody tr {
+            border-bottom: 1px solid var(--card-border);
+            transition: background-color 0.15s;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: var(--row-hover);
+        }
+
+        td {
+            padding: 12px 18px;
+            vertical-align: middle;
+        }
+
+        .entry-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            word-break: break-all;
+            transition: color 0.15s;
+        }
+
+        .entry-link:hover {
+            color: var(--primary);
+        }
+
+        .entry-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .badge-folder { background: rgba(59, 130, 246, 0.15); color: var(--badge-folder); }
+        .badge-jar { background: rgba(139, 92, 246, 0.15); color: var(--badge-jar); }
+        .badge-pom { background: rgba(249, 115, 22, 0.15); color: var(--badge-pom); }
+        .badge-xml { background: rgba(6, 182, 212, 0.15); color: var(--badge-xml); }
+        .badge-hash { background: rgba(100, 116, 139, 0.15); color: var(--badge-hash); }
+
+        .date-col {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .size-col {
+            color: var(--text-muted);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .parent-row {
+            background: rgba(0, 0, 0, 0.01);
+        }
+
+        .parent-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .parent-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 36px 18px;
+            color: var(--text-muted);
+        }
+
+        footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 640px) {
+            th.col-date, td.date-col {
+                display: none;
+            }
+            th.col-name { width: 70%; }
+            th.col-size { width: 30%; }
+            body { padding: 16px 10px 32px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-group">
+                <div class="repo-logo">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="repo-name">Maven Repository</h1>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" id="theme-btn" title="Toggle Light/Dark Theme">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text">Dark</span>
+                </button>
+            </div>
+        </header>
+
+        <nav class="breadcrumbs" aria-label="Directory Breadcrumbs">
+            {% for crumb in breadcrumbs %}
+                {% if not loop.first %}<span class="breadcrumb-sep">/</span>{% endif %}
+                {% if loop.last %}
+                    <span class="breadcrumb-item active">{{ crumb.name }}</span>
+                {% else %}
+                    <a href="{{ crumb.href }}" class="breadcrumb-item">{{ crumb.name }}</a>
+                {% endif %}
+            {% endfor %}
+        </nav>
+
+        {% if maven_snippet %}
+        <div class="snippet-card">
+            <div class="snippet-title">
+                <span>Dependency Snippet</span>
+                <div class="snippet-tabs">
+                    <button class="snippet-tab active" onclick="switchSnippet('maven')">Maven</button>
+                    <button class="snippet-tab" onclick="switchSnippet('gradle')">Gradle</button>
+                    <button class="snippet-tab" onclick="switchSnippet('kotlin')">Gradle (Kotlin)</button>
+                </div>
+            </div>
+            <div class="snippet-code-wrapper">
+                <button class="copy-btn" onclick="copySnippet()">Copy</button>
+                <div id="snippet-maven" class="snippet-code">{{ maven_snippet.maven }}</div>
+                <div id="snippet-gradle" class="snippet-code" style="display: none;">{{ maven_snippet.gradle }}</div>
+                <div id="snippet-kotlin" class="snippet-code" style="display: none;">{{ maven_snippet.kotlin }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="toolbar">
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                </svg>
+                <input type="text" id="filter-input" class="search-input" placeholder="Filter files and directories..." autocomplete="off">
+            </div>
+            <div class="stats-badge">
+                <span id="entry-count">{{ total_dirs }} directories, {{ total_files }} files</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table id="file-table">
+                    <thead>
+                        <tr>
+                            <th class="col-name">Name</th>
+                            <th class="col-size">Size</th>
+                            <th class="col-date">Last Modified</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if parent_href %}
+                        <tr class="parent-row">
+                            <td colspan="3">
+                                <a href="{{ parent_href }}" class="parent-link">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                                    </svg>
+                                    .. (Parent Directory)
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                        {% for dir in directories %}
+                        <tr class="entry-row" data-name="{{ dir.name|lower }}">
+                            <td class="name-col">
+                                <a href="{{ dir.href }}" class="entry-link">
+                                    <span class="entry-icon">📁</span>
+                                    <span>{{ dir.display_name }}</span>
+                                </a>
+                            </td>
+                            <td class="size-col">-</td>
+                            <td class="date-col">{{ dir.last_modified }}</td>
+                        </tr>
+                        {% endfor %}
+
+                        {% for file in files %}
+                        <tr class="entry-row" data-name="{{ file.name|lower }}">
+                            <td class="name-col">
+                                <a href="{{ file.href }}" class="entry-link">
+                                    <span class="entry-icon">{{ file.icon_emoji }}</span>
+                                    <span>{{ file.display_name }}</span>
+                                    {% if file.badge %}
+                                    <span class="badge {{ file.badge_class }}">{{ file.badge }}</span>
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <td class="size-col">{{ file.size_formatted }}</td>
+                            <td class="date-col">{{ file.last_modified }}</td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if total_dirs == 0 and total_files == 0 and not parent_href %}
+                        <tr>
+                            <td colspan="3" class="empty-row">No files found in this directory.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <p>Generated by Maven Static Repository Generator &bull; Ready for GitHub Pages &bull; {{ current_time }}</p>
+        </footer>
+    </div>
+
+    <script>
+        // Theme Toggle
+        (function() {
+            var themeBtn = document.getElementById('theme-btn');
+            var themeIcon = document.getElementById('theme-icon');
+            var themeText = document.getElementById('theme-text');
+            var currentTheme = localStorage.getItem('repo-theme');
+
+            if (!currentTheme) {
+                currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeIcon.textContent = '☀️';
+                    themeText.textContent = 'Light';
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    themeIcon.textContent = '🌙';
+                    themeText.textContent = 'Dark';
+                }
+                localStorage.setItem('repo-theme', theme);
+            }
+
+            applyTheme(currentTheme);
+
+            themeBtn.addEventListener('click', function() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                applyTheme(isDark ? 'light' : 'dark');
+            });
+        })();
+
+        // Filter Functionality
+        (function() {
+            var filterInput = document.getElementById('filter-input');
+            var rows = document.querySelectorAll('.entry-row');
+            if (!filterInput) return;
+
+            filterInput.addEventListener('input', function() {
+                var query = this.value.trim().toLowerCase();
+                var visibleCount = 0;
+
+                rows.forEach(function(row) {
+                    var name = row.getAttribute('data-name');
+                    if (!query || name.indexOf(query) !== -1) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        })();
+
+        // Snippet Tab Switching
+        function switchSnippet(type) {
+            var tabs = document.querySelectorAll('.snippet-tab');
+            tabs.forEach(function(tab) {
+                if (tab.textContent.toLowerCase().indexOf(type) !== -1) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            document.getElementById('snippet-maven').style.display = type === 'maven' ? 'block' : 'none';
+            document.getElementById('snippet-gradle').style.display = type === 'gradle' ? 'block' : 'none';
+            document.getElementById('snippet-kotlin').style.display = type === 'kotlin' ? 'block' : 'none';
+        }
+
+        // Copy Snippet
+        function copySnippet() {
+            var activeBox = document.querySelector('.snippet-code[style*="block"]') || document.getElementById('snippet-maven');
+            if (activeBox) {
+                navigator.clipboard.writeText(activeBox.textContent.trim()).then(function() {
+                    var btn = document.querySelector('.copy-btn');
+                    var old = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(function() { btn.textContent = old; }, 1500);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
