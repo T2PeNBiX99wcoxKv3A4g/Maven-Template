@@ -578,10 +578,10 @@
     <script>
         // Theme Toggle
         (function() {
-            var themeBtn = document.getElementById('theme-btn');
-            var themeIcon = document.getElementById('theme-icon');
-            var themeText = document.getElementById('theme-text');
-            var currentTheme = localStorage.getItem('repo-theme');
+            const themeBtn = document.getElementById('theme-btn');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            let currentTheme = localStorage.getItem('repo-theme');
 
             if (!currentTheme) {
                 currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -603,23 +603,23 @@
             applyTheme(currentTheme);
 
             themeBtn.addEventListener('click', function() {
-                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                 applyTheme(isDark ? 'light' : 'dark');
             });
         })();
 
         // Filter Functionality
         (function() {
-            var filterInput = document.getElementById('filter-input');
-            var rows = document.querySelectorAll('.entry-row');
+            const filterInput = document.getElementById('filter-input');
+            const rows = document.querySelectorAll('.entry-row');
             if (!filterInput) return;
 
             filterInput.addEventListener('input', function() {
-                var query = this.value.trim().toLowerCase();
-                var visibleCount = 0;
+                const query = this.value.trim().toLowerCase();
+                let visibleCount = 0;
 
                 rows.forEach(function(row) {
-                    var name = row.getAttribute('data-name');
+                    const name = row.getAttribute('data-name');
                     if (!query || name.indexOf(query) !== -1) {
                         row.style.display = '';
                         visibleCount++;
@@ -632,7 +632,7 @@
 
         // Snippet Tab Switching
         function switchSnippet(type) {
-            var tabs = document.querySelectorAll('.snippet-tab');
+            const tabs = document.querySelectorAll('.snippet-tab');
             tabs.forEach(function(tab) {
                 if (tab.textContent.toLowerCase().indexOf(type) !== -1) {
                     tab.classList.add('active');
@@ -648,11 +648,11 @@
 
         // Copy Snippet
         function copySnippet() {
-            var activeBox = document.querySelector('.snippet-code[style*="block"]') || document.getElementById('snippet-maven');
+            const activeBox = document.querySelector('.snippet-code[style*="block"]') || document.getElementById('snippet-maven');
             if (activeBox) {
                 navigator.clipboard.writeText(activeBox.textContent.trim()).then(function() {
-                    var btn = document.querySelector('.copy-btn');
-                    var old = btn.textContent;
+                    const btn = document.querySelector('.copy-btn');
+                    const old = btn.textContent;
                     btn.textContent = 'Copied!';
                     setTimeout(function() { btn.textContent = old; }, 1500);
                 });
