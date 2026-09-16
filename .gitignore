@@ -57,4 +57,3 @@ replay_*.log
 .junie/
 .lock
 uv.lock
-tests/

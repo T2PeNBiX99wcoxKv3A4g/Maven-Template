@@ -4,6 +4,7 @@ import argparse
 import datetime
 import html
 import os
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -52,6 +53,8 @@ IGNORE_FILES = {
     ".gitattributes",
     "README.md",
     "LICENSE",
+    "style.css",
+    "script.js",
 }
 
 
@@ -258,6 +261,31 @@ def generate_breadcrumbs(directory: Path, root: Path) -> list[dict[str, str]]:
     return breadcrumbs
 
 
+def calculate_root_offset(directory: Path, root: Path) -> str:
+    """Calculate relative path prefix back to root directory."""
+    try:
+        relative = directory.resolve().relative_to(root.resolve())
+        parts = relative.parts
+        if not parts:
+            return ""
+        return "../" * len(parts)
+    except ValueError:
+        return ""
+
+
+def copy_template_assets(template_dir: Path, target_root: Path) -> list[str]:
+    """Copy static assets (e.g. CSS, JS) from template directory to repository root."""
+    copied = []
+    if not template_dir.exists():
+        return copied
+    for item in template_dir.iterdir():
+        if item.is_file() and not item.name.endswith((".html", ".htm", ".jinja", ".jinja2")):
+            target_file = target_root / item.name
+            shutil.copy2(item, target_file)
+            copied.append(item.name)
+    return copied
+
+
 # ---------------------------------------------------------------------------
 # Generator
 # ---------------------------------------------------------------------------
@@ -347,6 +375,7 @@ def generate_html(env: Environment, directory: Path, root: Path | None = None) -
     current_path_str = relative_directory_path(directory, root)
     breadcrumbs = generate_breadcrumbs(directory, root)
     parent_href = "../" if directory != root else None
+    root_offset = calculate_root_offset(directory, root)
 
     # Snippet generation
     coords = extract_maven_coords(directory, root)
@@ -367,6 +396,7 @@ def generate_html(env: Environment, directory: Path, root: Path | None = None) -
         current_path=current_path_str,
         breadcrumbs=breadcrumbs,
         parent_href=parent_href,
+        root_offset=root_offset,
         directories=directories_data,
         files=files_data,
         total_dirs=len(directories_data),
@@ -377,7 +407,7 @@ def generate_html(env: Environment, directory: Path, root: Path | None = None) -
 
 
 def generate_repository_indexes(root: Path, template_dir: Path | None = None) -> int:
-    """Generate index.html for root and all non-ignored subdirectories."""
+    """Generate index.html for root and all non-ignored subdirectories, and copy template assets."""
     root = root.resolve()
     if not root.exists():
         raise SystemExit(f"Directory does not exist: {root}")
@@ -385,7 +415,13 @@ def generate_repository_indexes(root: Path, template_dir: Path | None = None) ->
     if not root.is_dir():
         raise SystemExit(f"Path is not a directory: {root}")
 
-    env = setup_template_env(template_dir)
+    tpl_dir = template_dir or TEMPLATE_DIR
+    env = setup_template_env(tpl_dir)
+
+    # Copy static assets (e.g. style.css, script.js) to root
+    copied_assets = copy_template_assets(tpl_dir, root)
+    if copied_assets:
+        print(f"Copied template assets to root: {', '.join(copied_assets)}")
 
     directories_to_process = [root]
 
