@@ -56,3 +56,4 @@ replay_*.log
 .kotlin/
 .junie/
 .lock
+uv.lock
