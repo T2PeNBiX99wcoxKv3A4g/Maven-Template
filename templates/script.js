@@ -67,7 +67,7 @@
 function switchSnippet(type) {
     const tabs = document.querySelectorAll('.snippet-tab');
     tabs.forEach(function(tab) {
-        if (tab.textContent.toLowerCase().indexOf(type) !== -1) {
+        if (tab.getAttribute('data-type') === type) {
             tab.classList.add('active');
         } else {
             tab.classList.remove('active');
