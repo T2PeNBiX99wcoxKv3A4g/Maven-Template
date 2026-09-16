@@ -63,11 +63,18 @@
     });
 })();
 
-// Snippet Tab Switching
-function switchSnippet(type) {
-    const tabs = document.querySelectorAll('.snippet-tab');
+// Snippet Tab Switching & Clipboard
+let activeSnippetType = 'maven';
+
+function switchSnippet(type, element) {
+    activeSnippetType = type;
+    const container = element ? element.closest('.snippet-card') : document;
+    const tabs = (container || document).querySelectorAll('.snippet-tab');
+    
     tabs.forEach(function(tab) {
-        if (tab.getAttribute('data-type') === type) {
+        if (element && tab === element) {
+            tab.classList.add('active');
+        } else if (!element && tab.getAttribute('data-type') === type) {
             tab.classList.add('active');
         } else {
             tab.classList.remove('active');
@@ -83,11 +90,16 @@ function switchSnippet(type) {
     if (kotlinBox) kotlinBox.style.display = type === 'kotlin' ? 'block' : 'none';
 }
 
+// Global exposure
+window.switchSnippet = switchSnippet;
+
 // Copy Snippet
 function copySnippet() {
-    const activeBox = document.querySelector('.snippet-code[style*="block"]') || document.getElementById('snippet-maven');
-    if (activeBox) {
-        navigator.clipboard.writeText(activeBox.textContent.trim()).then(function() {
+    const targetBox = document.getElementById('snippet-' + activeSnippetType) || 
+                      document.querySelector('.snippet-code[style*="block"]') || 
+                      document.getElementById('snippet-maven');
+    if (targetBox) {
+        navigator.clipboard.writeText(targetBox.textContent.trim()).then(function() {
             const btn = document.querySelector('.copy-btn');
             if (btn) {
                 const old = btn.textContent;
@@ -97,3 +109,5 @@ function copySnippet() {
         });
     }
 }
+
+window.copySnippet = copySnippet;
